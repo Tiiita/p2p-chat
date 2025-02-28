@@ -25,7 +25,8 @@ impl P2P {
             return;
         }
 
-        log!("Sent message: {}", msg.bright_green());
+        let ipaddr = self.stream.local_addr().unwrap();
+        log!("{} (you): {}", ipaddr, msg.bright_green());
     }
 }
 
@@ -62,8 +63,9 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             }
         };
 
+        let ipaddr = stream.peer_addr().unwrap();
         let msg = String::from_utf8_lossy(&buf[..bytes_read]);
-        log!("Got message: {}", msg.bright_green());
+        log!("{}: {}", ipaddr, msg.bright_green());
     }
 
     Ok(())

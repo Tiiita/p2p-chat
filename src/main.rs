@@ -30,13 +30,13 @@ fn main() {
 }
 
 fn ask_for_target() -> (String, u16) {
-    log!("Specifiy the target ip (NO PORT):");
+    log!("Specify the target ip (NO PORT):");
     let mut buf = String::new();
     stdin().read_line(&mut buf).expect("Failed to read line");
     let ip = buf.trim().to_string();
 
     loop {
-        log!("Specifiy the target port:");
+        log!("Specify the target port:");
         let mut buf = String::new();
         stdin().read_line(&mut buf).expect("Failed to read line");
         let port = buf.trim().to_string();
@@ -56,7 +56,7 @@ fn connect_target(target: String) -> P2P {
     loop {
         let p2p = P2P::new(&target);
         if let Ok(_) = p2p {
-            log!("✅Connected to target peer");
+            log!("✅ Connected to target peer");
             return p2p.unwrap();
         }
 
