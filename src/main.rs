@@ -15,12 +15,12 @@ fn main() {
     println!("");
     let target = ask_for_target();
     let target_copy = target.clone();
-    let mut p2p = connect_target(target);
 
     thread::spawn(move || {
         p2p::listen(&target_copy).ok();
     });
 
+    let mut p2p = connect_target(target);
     loop {
         let mut in_buf = String::new();
         stdin().read_line(&mut in_buf).expect("Failed to read line");
@@ -46,7 +46,7 @@ fn connect_target(target: String) -> P2P {
         }   
 
         if i == 0 {
-            log!("Target machine unreachable (is it offline?): {}, {}", p2p.err().unwrap(), "trying silently..".on_bright_green());
+            log!("Target machine unreachable (is it offline?): {}, {}", p2p.err().unwrap(), "trying silently".on_bright_green());
         }
 
         thread::sleep(Duration::from_secs(1));
