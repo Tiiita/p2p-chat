@@ -29,8 +29,8 @@ impl P2P {
     }
 }
 
-pub fn listen(target: &str) -> std::io::Result<()> {
-    let listener = TcpListener::bind(target)?;
+pub fn listen(port: u16) -> std::io::Result<()> {
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))?;
     log!("✅Listening for incoming messages");
 
     for stream in listener.incoming() {
