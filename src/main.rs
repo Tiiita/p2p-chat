@@ -1,4 +1,4 @@
-use std::{io::stdin, net::{Ipv4Addr, SocketAddrV4}, thread, time::Duration};
+use std::{io::{stdin, stdout, Write}, net::{Ipv4Addr, SocketAddrV4}, thread, time::Duration};
 
 use colored::*;
 use igd::search_gateway;
@@ -7,6 +7,12 @@ use p2p::P2P;
 macro_rules! log {
     ($($arg:tt)*) => {
         println!("{} {}", "►".bright_green(), format!($($arg)*))
+    };
+}
+
+macro_rules! log_nol {
+    ($($arg:tt)*) => {
+        print!("{} {}", "►".bright_green(), format!($($arg)*))
     };
 }
 
@@ -34,13 +40,15 @@ fn main() {
 }
 
 fn ask_for_target() -> (String, u16) {
-    log!("Specify the target ip (NO PORT):");
+    log_nol!("Specify the target ip (NO PORT): ");
+    stdout().flush().ok();
     let mut buf = String::new();
     stdin().read_line(&mut buf).expect("Failed to read line");
     let ip = buf.trim().to_string();
 
     loop {
-        log!("Specify the target port:");
+        log_nol!("Specify the target port: ");
+        stdout().flush().ok();
         let mut buf = String::new();
         stdin().read_line(&mut buf).expect("Failed to read line");
         let port = buf.trim().to_string();
@@ -57,7 +65,7 @@ fn ask_for_target() -> (String, u16) {
 
 fn port_forward<'a>(port: u16) -> Result<(), &'a str> {
     let gateway = search_gateway(Default::default()).or_else(|_| {
-        return Err("Port forwarding not avilable");
+        return Err("Port forwarding not available");
     });
     
     let gateway = gateway.unwrap();
