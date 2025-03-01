@@ -1,6 +1,7 @@
-use std::{io::stdin, thread, time::Duration};
+use std::{io::stdin, net::{Ipv4Addr, SocketAddrV4}, thread, time::Duration};
 
 use colored::*;
+use igd::search_gateway;
 use p2p::P2P;
 
 macro_rules! log {
@@ -15,6 +16,9 @@ fn main() {
     println!("");
     let target = ask_for_target();
     let target_copy = target.clone();
+    if let Err(why) = port_forward(target.1) {
+        log!("{why}");
+    }
 
     thread::spawn(move || {
         p2p::listen(target_copy.1).ok();
@@ -51,6 +55,27 @@ fn ask_for_target() -> (String, u16) {
     }
 }
 
+fn port_forward<'a>(port: u16) -> Result<(), &'a str> {
+    let gateway = search_gateway(Default::default()).or_else(|_| {
+        return Err("Port forwarding not avilable");
+    });
+    
+    let gateway = gateway.unwrap();
+
+    gateway.add_port(
+        igd::PortMappingProtocol::TCP,
+        port,
+        SocketAddrV4::new(Ipv4Addr::LOCALHOST, port),
+        60,
+        "p2p-chat application"
+    ).or_else(|_| {
+        return Err("Port forwarding failed");
+    }).ok();
+    
+    log!("✅ Port {} forwarded successfully!", port);
+    Ok(())
+}
+
 fn connect_target(target: String) -> P2P {
     let mut i = 0;
     loop {
@@ -62,9 +87,8 @@ fn connect_target(target: String) -> P2P {
 
         if i == 0 {
             log!(
-                "Target machine unreachable (is it offline?): {}, {}",
-                p2p.err().unwrap(),
-                "trying silently".on_bright_green()
+                "Target unreachable, it my be still offline. {}",
+                "Retrying silently".on_bright_green()
             );
         }
 
