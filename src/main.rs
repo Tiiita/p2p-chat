@@ -1,4 +1,9 @@
-use std::{io::{stdin, stdout, Write}, net::{Ipv4Addr, SocketAddrV4}, thread, time::Duration};
+use std::{
+    io::{stdin, stdout, Write},
+    net::{Ipv4Addr, SocketAddrV4},
+    thread,
+    time::Duration,
+};
 
 use colored::*;
 use igd::search_gateway;
@@ -63,25 +68,29 @@ fn ask_for_target() -> (String, u16) {
     }
 }
 
-fn port_forward<'a>(port: u16) -> Result<(), &'a str> {
-    let gateway = search_gateway(Default::default()).or_else(|_| {
-        return Err("Port forwarding not available");
-    });
-    
-    let gateway = gateway.unwrap();
+fn port_forward(port: u16) -> Result<(), String> {
+    match search_gateway(Default::default()) {
+        Ok(gateway) => {
+            gateway
+                .add_port(
+                    igd::PortMappingProtocol::TCP,
+                    port,
+                    SocketAddrV4::new(Ipv4Addr::LOCALHOST, port),
+                    60,
+                    "p2p-chat application",
+                )
+                .or_else(|_| {
+                    return Err("Port forwarding failed");
+                })
+                .ok();
 
-    gateway.add_port(
-        igd::PortMappingProtocol::TCP,
-        port,
-        SocketAddrV4::new(Ipv4Addr::LOCALHOST, port),
-        60,
-        "p2p-chat application"
-    ).or_else(|_| {
-        return Err("Port forwarding failed");
-    }).ok();
-    
-    log!("✅ Port {} forwarded successfully!", port);
-    Ok(())
+            log!("✅ Port {} forwarded successfully!", port);
+            Ok(())
+        }
+        Err(why) => {
+            return Err(format!("Port forwarding not available: {}", why));
+        }
+    }
 }
 
 fn connect_target(target: String) -> P2P {
@@ -94,10 +103,7 @@ fn connect_target(target: String) -> P2P {
         }
 
         if i == 0 {
-            log!(
-                "Target unreachable, it my be still offline. {}",
-                "Retrying silently".on_bright_green()
-            );
+            log!("Waiting for target to connect..");
         }
 
         thread::sleep(Duration::from_secs(1));
